@@ -2,7 +2,12 @@
 
 XBee xbee = XBee();
 
+int packetnumber;
+int timestamp;
+uint8_t payload[] = { 'H', 'i' };
+
 Rx16Response rx16 = Rx16Response();
+Tx16Request tx16 = Tx16Request(0x2, payload, sizeof(payload));
 
 void setup()
 {
@@ -27,11 +32,13 @@ void loop()
 
       //print payload
       Serial.print("Received Paket: ");
-      int paketnumber = rx16.getData(0);
-      unsigned long t = rx16.getData(1);
-      Serial.print(paketnumber);
+      payload[0] = rx16.getData(0);
+      payload[1] = rx16.getData(1);
+      
+      Serial.print(payload[0]);
       Serial.print(" ");
-      Serial.println(t);
+      Serial.println(payload[1]);
+      
       /*for(int i=0;i < rx16.getDataLength(); i++){
         Serial.print(rx16.getData(i));
         Serial.print(" ");
