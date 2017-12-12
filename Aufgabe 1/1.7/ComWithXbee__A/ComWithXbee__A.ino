@@ -2,8 +2,9 @@
 
 XBee xbee = XBee();
 int packetnumber = 0;
+int packetsToCount = 1000
 uint8_t payload[] = { 'H' };
-unsigned long sendrectime[2][1000];
+unsigned long sendrectime[3][packetsToCount];
 int
 // 0x40E4937A
 //XBeeAddress64 addr64 = XBeeAddress64(0x0013a200, 0x40F301A5);
@@ -25,6 +26,7 @@ void setup() {
 }
 
 void loop() {
+  if(packetnuber <= packetsToCount){
   sendrectime[0][packetnumber] = millis();
   payload[0] = packetnumber;
 
@@ -68,13 +70,9 @@ void loop() {
 
       //print payload
       Serial.print("Received Paket: ");
-      int paketnumber = rx16.getData(0);
-      unsigned long t = rx16.getData(1);
-      Serial.print(paketnumber);
-      Serial.print(" ");
-      Serial.println(t);
-
-
+      int payload = rx16.getData(0)
+      sendrectime[1][payload] = millis();
+      Serial.print(payload);
     }
   }
   else if (xbee.getResponse().isError()) {
@@ -87,5 +85,13 @@ void loop() {
     // local XBee did not provide a timely TX Status Response.  Radio is not configured properly or connected
     Serial.println("Some Bad shit");
   }
-  delay(200);
+  delay(1000);
+  } else {
+    // Calc the statistics
+    
+    //print statistics
+
+
+    
+  }
 }
