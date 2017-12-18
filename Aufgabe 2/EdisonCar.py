@@ -10,6 +10,7 @@ class EdisonCar():
         self.pin_ina2 = mraa.Gpio(46)
         self.pin_inb1 = mraa.Gpio(47) # 0/1 -> go left/right
         self.pin_inb2 = mraa.Gpio(48)
+        self.period = 1
 
     def enable_pins(self):
         if self.pwm_ina is None:
@@ -45,24 +46,42 @@ class EdisonCar():
     def disable_motors(self):
         self.pin_stby.write(0)
 
-duty_cycle = 0.1
-period = 1
-pin_stby.write(1)
-value = 0.1
+    def drive(self, duty_cycle):
+        self.pwm_ina.write(duty_cycle)
 
-i = 0
+    def brake(self):
+        i = 0
+        while (i < 1000):
+            self.pin_inb1.write(1)
+            self.pin_inb2.write(0)
+            self.pwm_inb.period(self.period)
+            self.pwm_inb.write(1.0)
+            self.pin_inb1.write(0)
+            self.pin_inb2.write(1)
+            self.pwm_inb.period(self.period)
+            self.pwm_inb.write(1.0)
+            i += 1
 
-while (i < 500):
-    i += 1
-    pin_ina1.write(0)
-    pin_ina2.write(1)
-    pwm_ina.period(period)
-    pwm_ina.write(value)
+    def steer(self, dir):
+        '''
+        :param dir: string "left" or "write"
+        :return:
+        '''
+        if (dir == "left"):
+            self.pin_inb1.write(1)
+            self.pin_inb2.write(0)
+        elif (dir == "right"):
+            self.pin_inb1.write(0)
+            self.pin_inb2.write(1)
 
-    pin_inb1.write(1)
-    pin_inb2.write(0)
-    pwm_inb.period(period)
-    pwm_inb.write(0.3)
-    time.sleep(0.01)
+    def steeringAngle(self, duty_cycle):
+        self.pwm_inb.period(self.period)
+        self.pwm_inb.write(duty_cycle)
 
-pin_stby.write(0)
+    def setForward(self):
+        self.pin_ina1.write(1)
+        self.pin_ina2.write(0)
+
+    def setbBackward(self):
+        self.pin_ina1.write(0)
+        self.pin_ina2.write(1)
