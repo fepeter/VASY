@@ -47,25 +47,21 @@ class EdisonCar():
         self.pin_stby.write(0)
 
     def drive(self, duty_cycle):
-        print("driving", duty_cycle)
         self.pwm_ina.write(duty_cycle)
 
     def brake(self):
         print("breaking!!!")
         i = 0
-        self.pwm_ina.period(self.period)
-        self.pwm_ina.write(1.0)
-        self.pin_ina1.write(0)
-        self.pin_ina2.write(1)
-        time.sleep(0.5)
-
-        while(i < 1000):
+        while (i < 1000):
             self.pin_ina1.write(1)
             self.pin_ina2.write(0)
+            self.pwm_ina.period(self.period)
+            self.pwm_ina.write(1.0)
             self.pin_ina1.write(0)
             self.pin_ina2.write(1)
-            i+=1
-
+            self.pwm_ina.period(self.period)
+            self.pwm_ina.write(1.0)
+            i += 1
         self.pin_ina1.write(0)
         self.pin_ina2.write(0)
         self.pwm_ina.write(1.0)
@@ -99,17 +95,6 @@ class EdisonCar():
 def main():
     granTurino = EdisonCar()
     granTurino.enable_pins()
-    granTurino.enable_motors()
-    granTurino.setForward()
-
-    granTurino.drive(0.7)
-    print("sleep 2")
-    time.sleep(1)
-
-
-    granTurino.brake()
-    time.sleep(5)
-
     granTurino.disable_motors()
 
 
