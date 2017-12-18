@@ -27,3 +27,16 @@ def setForward():
 def setbBackward():
     pin_ina1.write(0)
     pin_ina2.write(1)
+
+def brake():
+    i = 0
+    while(i < 1000):
+        pin_inb1.write(1)
+        pin_inb2.write(0)
+        pwm_inb.period(period)
+        pwm_inb.write(1.0)
+        pin_inb1.write(0)
+        pin_inb2.write(1)
+        pwm_inb.period(period)
+        pwm_inb.write(1.0)
+        i += 1
