@@ -2,10 +2,11 @@
 
 XBee xbee = XBee();
 int packetnumber = 0;
-int packetsToCount = 1000
+int packetsToCount = 500;
 uint8_t payload[] = { 'H' };
-unsigned long sendrectime[3][packetsToCount];
-int
+// [0][packetnumber] = time of packet send , [1][packetnumber] = time of packet return
+unsigned long sendrectime[2][500];
+
 // 0x40E4937A
 //XBeeAddress64 addr64 = XBeeAddress64(0x0013a200, 0x40F301A5);
 
@@ -23,10 +24,17 @@ void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);
   xbee.setSerial(Serial1);
+
+  for(int i = 0; i < packetsToCount; i++){
+    sendrectime[0][i] = 0;
+    sendrectime[1][i] = 0;
+  }
+  Serial.println("Setupt Done");
+  
 }
 
 void loop() {
-  if(packetnuber <= packetsToCount){
+  if(packetnumber <= packetsToCount){
   sendrectime[0][packetnumber] = millis();
   payload[0] = packetnumber;
 
@@ -70,7 +78,7 @@ void loop() {
 
       //print payload
       Serial.print("Received Paket: ");
-      int payload = rx16.getData(0)
+      int payload = rx16.getData(0);
       sendrectime[1][payload] = millis();
       Serial.print(payload);
     }
@@ -88,10 +96,20 @@ void loop() {
   delay(1000);
   } else {
     // Calc the statistics
-    
+    int errors = 0;
+    for(int i = 0; i < packetnumber; i++){
+      if(sendrectime[1][i] == 0){
+        errors++;
+      }
+    }
+    int errorInPercent = (packetnumber/100) * errors;
     //print statistics
-
-
-    
+    Serial.print("Packetcount: ");
+    Serial.println(packetnumber);
+    Serial.print("Packeterrors: ");
+    Serial.print(errors);
+    Serial.print(" (");
+    Serial.print(errorInPercent);
+    Serial.println(")");
   }
 }
