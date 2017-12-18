@@ -80,10 +80,10 @@ int main() {
 	}
 
 	// define in and  and standy pins
-	mraa::Gpio* stby_pin = new mraa::Gpio(15);
-	mraa::Gpio* ina1_pin = new mraa::Gpio(45);
+	mraa::Gpio* stby_pin = new mraa::Gpio(15); // standby=0 means motor off
+	mraa::Gpio* ina1_pin = new mraa::Gpio(45); // a to 0/1 means go forward
 	mraa::Gpio* ina2_pin = new mraa::Gpio(46);
-	mraa::Gpio* inb1_pin = new mraa::Gpio(47);
+	mraa::Gpio* inb1_pin = new mraa::Gpio(47); // b to 1/0 means go left/right (try out)
 	mraa::Gpio* inb2_pin = new mraa::Gpio(48);
 
 	// check an enable the pins
