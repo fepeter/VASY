@@ -1,4 +1,4 @@
-import mraa, time
+import mraa, time, sys
 
 
 class EdisonCar():
@@ -11,6 +11,7 @@ class EdisonCar():
         self.pin_inb1 = mraa.Gpio(47)  # 0/1 -> go left/right
         self.pin_inb2 = mraa.Gpio(48)
         self.period = 1
+        self.drivingDir = None
 
     def enable_pins(self):
         if self.pwm_ina is None:
@@ -48,16 +49,17 @@ class EdisonCar():
 
     def drive(self, duty_cycle):
         print("driving", duty_cycle)
-        self.pwm_ina.write(duty_cycle)
+        self.__accelerate(duty_cycle)
+        #self.pwm_ina.write(duty_cycle)
 
-    def brake(self):
+    def brakeold(self, time=1, intensity = 0.7):
         print("breaking!!!")
         i = 0
-        self.pwm_ina.period(self.period)
+        self.pwm_ina.period_us(1000)
         self.pwm_ina.write(1.0)
         self.pin_ina1.write(0)
         self.pin_ina2.write(1)
-        time.sleep(0.5)
+
 
         while(i < 1000):
             self.pin_ina1.write(1)
@@ -70,16 +72,44 @@ class EdisonCar():
         self.pin_ina2.write(0)
         self.pwm_ina.write(1.0)
 
+    def brake(self, time1=1, intensity=1.0):
+        self.pwm_ina.period_us(1000)
+        self.pwm_ina.write(intensity)
+
+        if(self.drivingDir == "forward"):
+            for i in [x * 0.1 for x in range(0, int(10 * time1))]:
+                self.pin_ina1.write(0)
+                self.pin_ina2.write(1)
+                time.sleep(0.05)
+                self.pin_ina1.write(1)
+                self.pin_ina2.write(0)
+                time.sleep(0.01)
+
+        elif(self.drivingDir == "backward"):
+            for i in [x * 0.1 for x in range(0, int(10 * time1))]:
+                self.pin_ina1.write(1)
+                self.pin_ina2.write(0)
+                time.sleep(0.05)
+                self.pin_ina1.write(0)
+                self.pin_ina2.write(1)
+                time.sleep(0.01)
+
+        self.pin_ina1.write(0)
+        self.pin_ina2.write(1)
+        self.pwm_ina.period_us(1000)
+        self.pwm_ina.write(0)
+        time.sleep(time1)
+        self.drivingDir = None
 
     def steer(self, dir):
         '''
         :param dir: string "left" or "write"
         :return:
         '''
-        if (dir == "left"):
+        if (dir == "right"):
             self.pin_inb1.write(1)
             self.pin_inb2.write(0)
-        elif (dir == "right"):
+        elif (dir == "left"):
             self.pin_inb1.write(0)
             self.pin_inb2.write(1)
 
@@ -88,30 +118,49 @@ class EdisonCar():
         self.pwm_inb.write(duty_cycle)
 
     def setForward(self):
+        self.drivingDir = "forward"
         self.pin_ina1.write(1)
         self.pin_ina2.write(0)
 
     def setbBackward(self):
+        self.drivingDir = "backward"
         self.pin_ina1.write(0)
         self.pin_ina2.write(1)
 
+    def __accelerate(self, max_speed=1, intervall=0.1):
+        for i in [x * 0.1 for x in range(0, int(10 * max_speed))]:
+            self.pwm_ina.write(i)
+            time.sleep(intervall)
 
-def main():
-    granTurino = EdisonCar()
-    granTurino.enable_pins()
-    granTurino.enable_motors()
-    granTurino.setForward()
+def main(args):
+    if (len(args) > 1):
+        granTurino = EdisonCar()
+        granTurino.enable_pins()
+        granTurino.enable_motors()
 
-    granTurino.drive(0.7)
-    print("sleep 2")
-    time.sleep(1)
+        if(args[1] == "f"):
+            granTurino.setForward()
+        elif(args[1] == "b"):
+            granTurino.setbBackward()
 
+        if(args[2] != None):
+            drivingtime = float(args[2])
+            print("Drivingtime = ", drivingtime)
 
-    granTurino.brake()
-    time.sleep(5)
+        granTurino.steer("right")
+        granTurino.steeringAngle(1)
+        granTurino.drive(1)
 
-    granTurino.disable_motors()
+        print("sleep 1")
+        time.sleep(drivingtime)
+        granTurino.steeringAngle(1)
 
+        granTurino.brake()
+        time.sleep(5)
+
+        granTurino.disable_motors()
+    else:
+        print("No driving arguments set")
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv)
