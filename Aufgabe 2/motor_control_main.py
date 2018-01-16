@@ -1,4 +1,5 @@
-import mraa, time, sys
+#!/usr/bin/env python
+import mraa, time, sys, serial, io
 
 
 class EdisonCar():
@@ -12,6 +13,9 @@ class EdisonCar():
         self.pin_inb2 = mraa.Gpio(48)
         self.period = 1
         self.drivingDir = None
+        self.ser = None
+        self.sio = None
+        self.uart = None
 
     def enable_pins(self):
         if self.pwm_ina is None:
@@ -112,6 +116,9 @@ class EdisonCar():
         elif (dir == "left"):
             self.pin_inb1.write(0)
             self.pin_inb2.write(1)
+        elif(dir == "mid"):
+            self.pin_inb1.write(0)
+            self.pin_inb2.write(0)
 
     def steeringAngle(self, duty_cycle):
         self.pwm_inb.period(self.period)
@@ -132,35 +139,99 @@ class EdisonCar():
             self.pwm_ina.write(i)
             time.sleep(intervall)
 
+    def setupSerial(self):
+        '''
+        Setsum the Serial device
+        :return: serial object
+        '''
+        self.uart = mraa.Uart(0)
+        #self.uart.setBaudRate(9600)
+        #self.uart.setMode(8, mraa.UART_PARITY_NONE, 1)
+        #self.uart.setFlowcontrol(False, False)
+        #self.ser = serial.Serial(self.uart.getDevicePath(), 9600)
+        self.ser = serial.Serial("/dev/ttyMFD1", 9600)
+        self.sio = io.TextIOWrapper(io.BufferedRWPair(self.ser, self.ser))
+
+    def listenToTheAir(self):
+        '''
+        Listens to commands from the serial interface (XBEE)
+        Blocking function!
+        :return: 
+        '''
+        while(True):
+            #print("Waiting for orders")
+            #self.sio.flush()
+            #print(self.sio.read())
+            #print(decode(msg, 'unicode_escape'))
+            serialInput = self.ser.read()
+            print(serialInput)
+            if(serialInput == "w"):
+                self.setForward()
+                self.drive(0.7)
+            elif(serialInput == "b"):
+                self.brake()
+            elif(serialInput == "y"):
+                self.setbBackward()
+                self.drive(0.7)
+            elif(serialInput == "d"):
+                self.steer("right")
+                self.steeringAngle(1)
+            elif (serialInput == "a"):
+                self.steer("left")
+                self.steeringAngle(1)
+            elif(serialInput == "s"):
+                self.steer("mid")
+                self.steeringAngle(0)
+
+           # if(self.uart.dataAvailable()):
+           #     byte = self.uart.readStr(1)
+           #     s = byte.decode('unicode_escape')
+           #     print(byte, s)
+
 def main(args):
-    if (len(args) > 1):
+
+
+    if(False):
+        if (len(args) > 1):
+            granTurino = EdisonCar()
+            granTurino.enable_pins()
+            granTurino.enable_motors()
+
+            if(args[1] == "f"):
+                granTurino.setForward()
+            elif(args[1] == "b"):
+                granTurino.setbBackward()
+
+            if(args[2] != None):
+                drivingtime = float(args[2])
+                print("Drivingtime = ", drivingtime)
+
+            #granTurino.steer("right")
+            #granTurino.steeringAngle(1)
+            #granTurino.drive(0.8)
+
+            #print("sleep 1")
+            #time.sleep(drivingtime)
+            #granTurino.steeringAngle(1)
+
+            #granTurino.brake()
+            #time.sleep(5)
+
+            granTurino.setupSerial()
+            granTurino.listenToTheAir()
+
+            granTurino.disable_motors()
+        else:
+            print("No driving arguments set")
+
+    else:
         granTurino = EdisonCar()
         granTurino.enable_pins()
         granTurino.enable_motors()
-
-        if(args[1] == "f"):
-            granTurino.setForward()
-        elif(args[1] == "b"):
-            granTurino.setbBackward()
-
-        if(args[2] != None):
-            drivingtime = float(args[2])
-            print("Drivingtime = ", drivingtime)
-
-        granTurino.steer("right")
-        granTurino.steeringAngle(1)
-        granTurino.drive(1)
-
-        print("sleep 1")
-        time.sleep(drivingtime)
-        granTurino.steeringAngle(1)
-
-        granTurino.brake()
-        time.sleep(5)
+        granTurino.setupSerial()
+        granTurino.listenToTheAir()
 
         granTurino.disable_motors()
-    else:
-        print("No driving arguments set")
 
 if __name__ == '__main__':
     main(sys.argv)
