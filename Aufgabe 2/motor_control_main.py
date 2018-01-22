@@ -167,7 +167,7 @@ class EdisonCar():
             print(serialInput)
             if(serialInput == "w"):
                 self.setForward()
-                self.drive(0.7)
+                self.drive(1.0)
             elif(serialInput == "b"):
                 self.brake()
             elif(serialInput == "y"):
